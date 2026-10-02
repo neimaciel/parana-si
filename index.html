@@ -110,7 +110,7 @@
       font-weight: 500;
       letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: var(--dim);
+      color: #FFD600;
       margin-bottom: 28px;
     }
 
@@ -122,8 +122,10 @@
       color: var(--white);
       margin-bottom: 52px;
       /* subtle text shimmer */
-      color: #FFD600;
-      -webkit-text-fill-color: #FFD600;
+      background: linear-gradient(160deg, #fff 55%, rgba(255,255,255,0.5) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     /* thin separator */
