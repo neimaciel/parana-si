@@ -26,3 +26,6 @@ jobs:
             **/.git*
             **/.git*/**
             **/README.md
+            **/data/**
+            **/*.db*
+            **/*.sqlite*

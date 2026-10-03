@@ -3,3 +3,6 @@
 logo-random*
 icon-random*
 symbol-random.png
+data/*.db*
+data/*.sqlite*
+*.db*

@@ -301,6 +301,28 @@
       return next - brt;
     }
     setTimeout(function tick() { update(); setTimeout(tick, msToMidnightBRT()); }, msToMidnightBRT());
+
+    // ── Rastreador interno silencioso ──
+    (function() {
+      try {
+        var payload = JSON.stringify({
+          path: window.location.pathname + window.location.search,
+          ref: document.referrer || '',
+          screen: window.screen ? (window.screen.width + 'x' + window.screen.height) : ''
+        });
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon('/track.php', new Blob([payload], {type: 'application/json'}));
+        } else {
+          fetch('/track.php', {
+            method: 'POST',
+            body: payload,
+            headers: {'Content-Type': 'application/json'},
+            keepalive: true
+          }).catch(function(){});
+        }
+      } catch(e) {}
+    })();
   </script>
+  <noscript><img src="/track.php?type=img" width="1" height="1" style="display:none" alt="" /></noscript>
 </body>
 </html>
