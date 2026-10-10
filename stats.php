@@ -762,6 +762,29 @@ if ($pdo) {
       </div>
     </div>
 
+    <!-- Chat: respostas dos visitantes -->
+    <?php
+      $chatRows = [];
+      if ($pdo) {
+        try {
+          $pdo->exec("CREATE TABLE IF NOT EXISTS chat_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT NOT NULL, ip_hash TEXT NOT NULL, interesse TEXT NOT NULL, contato TEXT NOT NULL, mensagem TEXT NOT NULL)");
+          $chatRows = $pdo->query("SELECT created_at, interesse, contato, mensagem FROM chat_messages ORDER BY id DESC LIMIT 50")->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) { $chatRows = []; }
+      }
+    ?>
+    <div class="panel" style="margin-top: 24px;">
+      <div class="panel-title"><span>Respostas do chat (<?= count($chatRows) ?>)</span></div>
+      <?php if (!$chatRows): ?>
+        <div class="empty-note">Ninguém respondeu ainda.</div>
+      <?php else: foreach ($chatRows as $c): ?>
+        <div style="padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.06);">
+          <div style="font-size: 12px; color: rgba(255,255,255,0.4);"><?= htmlspecialchars($c['created_at']) ?> · <?= $c['interesse'] === 'sim' ? 'quer saber mais' : ($c['interesse'] === 'olhando' ? 'só olhando' : 'sem escolha') ?></div>
+          <?php if ($c['contato'] !== ''): ?><div style="margin-top: 4px; font-weight: 600;"><?= htmlspecialchars($c['contato']) ?></div><?php endif; ?>
+          <?php if ($c['mensagem'] !== ''): ?><div style="margin-top: 4px; color: rgba(255,255,255,0.7);"><?= nl2br(htmlspecialchars($c['mensagem'])) ?></div><?php endif; ?>
+        </div>
+      <?php endforeach; endif; ?>
+    </div>
+
     <!-- Detalhamento: Origens e Dispositivos -->
     <div class="breakdown-grid">
       <!-- Origens -->

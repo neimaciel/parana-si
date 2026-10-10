@@ -238,6 +238,26 @@
       .topbar-right { display: none; }
       .domain { margin-bottom: 36px; }
     }
+
+    /* ── Chat ── */
+    .chat { position: fixed; right: clamp(16px, 3vw, 32px); bottom: clamp(16px, 3vw, 32px); z-index: 50; width: min(340px, calc(100vw - 32px));
+      background: #121212; border: 1px solid var(--line); border-radius: 18px; padding: 18px; box-shadow: 0 20px 40px rgba(0,0,0,.6);
+      transform: translateY(16px); opacity: 0; pointer-events: none; transition: opacity .35s ease, transform .35s ease; }
+    .chat.on { transform: none; opacity: 1; pointer-events: auto; }
+    .chat-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .chat-q { font-size: 15px; font-weight: 600; line-height: 1.4; }
+    .chat-x { background: none; border: 0; color: var(--off); font-size: 20px; line-height: 1; cursor: pointer; padding: 0 2px; }
+    .chat-opts { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .chat button.opt, .chat button.send { font: inherit; font-size: 14px; font-weight: 600; color: #080808; background: #fff; border: 0; border-radius: 999px; padding: 11px 16px; cursor: pointer; }
+    .chat button.opt.alt { background: transparent; color: var(--white); border: 1px solid var(--dim); }
+    .chat form { display: none; margin-top: 14px; gap: 8px; flex-direction: column; }
+    .chat form.on { display: flex; }
+    .chat input, .chat textarea { font: inherit; font-size: 14px; color: var(--white); background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; width: 100%; resize: none; }
+    .chat input:focus, .chat textarea:focus { outline: 1px solid var(--off); }
+    .chat .hp { position: absolute; left: -9999px; }
+    .chat-ok { display: none; margin-top: 12px; font-size: 14px; color: var(--off); line-height: 1.5; }
+    .chat-ok.on { display: block; }
+    .chat-note { margin-top: 10px; font-size: 11px; color: var(--dim); }
   </style>
 </head>
 <body>
@@ -324,5 +344,69 @@
     })();
   </script>
   <noscript><img src="/track.php?type=img" width="1" height="1" style="display:none" alt="" /></noscript>
+  <aside class="chat" id="chat" role="dialog" aria-live="polite" aria-label="Chat do domínio">
+    <div class="chat-top">
+      <div class="chat-q" id="chat-q">Esse domínio te interessa?</div>
+      <button class="chat-x" id="chat-x" type="button" aria-label="Fechar">&times;</button>
+    </div>
+    <div class="chat-opts" id="chat-opts">
+      <button class="opt" type="button" data-i="sim">Sim, quero saber mais</button>
+      <button class="opt alt" type="button" data-i="olhando">Só estou olhando</button>
+    </div>
+    <form id="chat-form" autocomplete="off">
+      <input class="hp" name="site" tabindex="-1" aria-hidden="true" />
+      <input name="contato" id="chat-contato" type="text" maxlength="120" placeholder="Seu e-mail ou WhatsApp" />
+      <textarea name="mensagem" id="chat-msg" rows="3" maxlength="800" placeholder="Quer deixar uma mensagem? (opcional)"></textarea>
+      <button class="send" type="submit">Enviar</button>
+    </form>
+    <div class="chat-ok" id="chat-ok"></div>
+    <div class="chat-note">Sem cookies. Só guardamos o que você escrever aqui.</div>
+  </aside>
+  <script>
+    (function () {
+      var box = document.getElementById('chat');
+      if (!box) return;
+      try { if (sessionStorage.getItem('chat_fechado')) return; } catch (e) {}
+      var escolha = '';
+      var q = document.getElementById('chat-q');
+      var opts = document.getElementById('chat-opts');
+      var form = document.getElementById('chat-form');
+      var ok = document.getElementById('chat-ok');
+      var visivel = 0;
+      var tick = setInterval(function () {
+        if (document.visibilityState === 'visible') visivel += 1;
+        if (visivel >= 10) { clearInterval(tick); box.classList.add('on'); }
+      }, 1000);
+      function fechar() {
+        box.classList.remove('on');
+        try { sessionStorage.setItem('chat_fechado', '1'); } catch (e) {}
+      }
+      document.getElementById('chat-x').addEventListener('click', fechar);
+      opts.addEventListener('click', function (ev) {
+        var b = ev.target.closest('button[data-i]');
+        if (!b) return;
+        escolha = b.getAttribute('data-i');
+        opts.style.display = 'none';
+        q.textContent = escolha === 'sim' ? 'Ótimo. Como posso falar com você?' : 'Sem problema. Quer deixar um recado?';
+        form.classList.add('on');
+        (escolha === 'sim' ? document.getElementById('chat-contato') : document.getElementById('chat-msg')).focus();
+      });
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var d = new FormData(form);
+        var corpo = JSON.stringify({ interesse: escolha, contato: d.get('contato') || '', mensagem: d.get('mensagem') || '', site: d.get('site') || '' });
+        form.classList.remove('on');
+        ok.textContent = 'Enviando...';
+        ok.classList.add('on');
+        fetch('/chat.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: corpo })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            ok.textContent = j.ok ? 'Recebido. Obrigado, retorno em breve.' : 'Não consegui enviar agora. Escreva para neimaciel@random.marketing.';
+            if (j.ok) setTimeout(fechar, 4000);
+          })
+          .catch(function () { ok.textContent = 'Não consegui enviar agora. Escreva para neimaciel@random.marketing.'; });
+      });
+    })();
+  </script>
 </body>
 </html>
