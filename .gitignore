@@ -6,3 +6,4 @@ symbol-random.png
 data/*.db*
 data/*.sqlite*
 *.db*
+config.local.php

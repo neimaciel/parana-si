@@ -139,7 +139,14 @@ if (preg_match('/Edg/i', $userAgent)) {
 }
 
 // Hashing para privacidade e identificação de visitantes únicos
-$salt = 'parana_si_analytics_salt_2026';
+if (is_file(__DIR__ . '/config.local.php')) {
+    require __DIR__ . '/config.local.php';
+}
+if (!defined('ANALYTICS_SALT') || ANALYTICS_SALT === '') {
+    sendResponse();
+    exit;
+}
+$salt = ANALYTICS_SALT;
 $ipHash = hash('sha256', $ip . $salt);
 $dateBrt = date('Y-m-d');
 $hourBrt = (int)date('H');

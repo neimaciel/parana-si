@@ -13,6 +13,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Gerar config.local.php a partir dos segredos
+        env:
+          ADMIN_HASH: ${{ secrets.PARANA_ADMIN_HASH }}
+          SALT: ${{ secrets.PARANA_SALT }}
+        run: |
+          test -n "$ADMIN_HASH" && test -n "$SALT"
+          printf "<?php\ndefine('ADMIN_PASSWORD_HASH', '%s');\ndefine('ANALYTICS_SALT', '%s');\n" "$ADMIN_HASH" "$SALT" > config.local.php
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:

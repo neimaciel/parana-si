@@ -9,8 +9,14 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 date_default_timezone_set('America/Sao_Paulo');
 
-// SENHA DE ACESSO AO PAINEL (Altere aqui se desejar)
-define('ADMIN_PASSWORD', 'parana2026');
+// Hash da senha do painel: vem de config.local.php, gerado no deploy a partir de um segredo.
+// Sem esse arquivo, o painel fica fechado (nunca há senha padrão).
+if (is_file(__DIR__ . '/config.local.php')) {
+    require __DIR__ . '/config.local.php';
+}
+if (!defined('ADMIN_PASSWORD_HASH')) {
+    define('ADMIN_PASSWORD_HASH', '');
+}
 
 // Logout
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
@@ -24,7 +30,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
 $loginError = '';
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 if ($method === 'POST' && isset($_POST['password'])) {
-    if ($_POST['password'] === ADMIN_PASSWORD) {
+    if (ADMIN_PASSWORD_HASH !== '' && is_string($_POST['password']) && password_verify($_POST['password'], ADMIN_PASSWORD_HASH)) {
         $_SESSION['parana_admin_logged'] = true;
         header('Location: stats.php');
         exit;
